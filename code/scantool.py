@@ -124,29 +124,12 @@ def getResponse(allArgList, allResponsDict, datas, preDatas, depRes, token, u):
     if 'requset example' in datas and datas['requset example'] is not None:
         print('dd')
     url = datas['Method URL']
-    if url in 'https://cliq.zoho.com/api/v2/chats/{chat_id}/messages?limit=4':
-        print('dd')
-    if 'https://api.zoom.us/v2/meetings/{meetingId}/recordings/registrants' in url:
-        print('ss')
-    if 'https://api.zoom.us/v2/accounts/{accountId}/plans/addons' in url:
-        print('dd')
-    if 'https://api.zoom.us/v2/meetings/{meetingId}/registrants' in url:
-        print('df')
-    if 'https://api.zoom.us/v2/users/{userId}/meetings' in url:
-        print('d')
-    if 'https://api.zoom.us/v2/meetings/{meetingId}/polls' in url:
-        print('fdf')
     if ' ' in url:
         items = url.split(' ')
         url = items[0]
-    if 'https://graph.microsoft.com/v1.0/groups' in url:
-        print('dd')
     headers = {}
     headers['Content-type'] = 'application/json'
-    #headers['Content-type'] = datas['content type'] # teams
     headers['Authorization'] = 'Bearer ' + token[0]
-    #headers['X-Auth-Token'] = token[0]
-    #headers['X-User-Id'] = u
     i = 1
     data = {}
     argstr = ''
@@ -200,11 +183,8 @@ def getResponse(allArgList, allResponsDict, datas, preDatas, depRes, token, u):
 
             elif arg in deps and len(deps[arg]) > 0:
                 items = deps[arg].split('---')
-                #方法名
                 m = items[0]
-                #判断是否自我依赖
                 if m == url:
-                    #自我依赖，则放弃该关系
                     if arg in preDatas:
                         preData = preDatas[arg]
                         if isinstance(preData, list) and len(preData) > 0:
@@ -219,8 +199,6 @@ def getResponse(allArgList, allResponsDict, datas, preDatas, depRes, token, u):
                             argstr = argstr + trueArg + '=' + str(preData) + '&'
                             sendData[trueArg] = preData
 
-                        # data[arg] = preDatas[arg]
-
                     elif arg != 'token' and datas['Arg_Example' + str(i)] is not None:
                         argstr = argstr + trueArg + '=' + str(datas['Arg_Example' + str(i)]) + '&'
                         argdata = datas['Arg_Example' + str(i)]
@@ -230,8 +208,6 @@ def getResponse(allArgList, allResponsDict, datas, preDatas, depRes, token, u):
                             sendData[trueArg] = json.loads(argdata)
                         else:
                             sendData[trueArg] = argdata
-                        # data[arg] = datas['Arg_Example'+str(i)]
-                #
                 elif m in depRes:
                     result = depRes[m]
                     if len(items) == 2:
@@ -240,13 +216,9 @@ def getResponse(allArgList, allResponsDict, datas, preDatas, depRes, token, u):
                     elif len(items) == 4:
                         ta = trueArgs
                         t = ''
-                        #获取真实的response 的字典
                         trueRess = allResponsDict[items[0]+'---'+items[1]+'---'+items[2]]
-                        #获取真实response中key
                         trueRes = trueRess[items[3]]
-                        #判断该key是否嵌套
                         if '---' in trueRes:
-                            #嵌套，解套获取value
                             resItems = trueRes.split('---')
                             if resItems[0] not in result and datas['Arg_Example' + str(i)] is not None:
                                 argstr = argstr + trueArg + '=' + str(datas['Arg_Example' + str(i)]) + '&'
@@ -693,26 +665,18 @@ def getObjectCRU(data, allObjList):
 
 #
 def buildLinkForArg(crud, oldArg, arg, datas, allArgList, resList, newArgs):
-    # 遍历datas中的每一个方法,获得每个方法的response
     for m, res in datas.items():
-        # 如果方法m也存在参数arg,则跳过该方法m
         if m in allArgList and crud != 'INSERT':
             mArgList = allArgList[m]
             if arg in mArgList:
                 continue
 
-        # 判断response是否为list,如果是,则选择list中的第一个元素来表示该response
         if isinstance(res, list) and len(res) > 0:
             res = res[0]
-        # 判断response是否为dict
         if isinstance(res, dict):
-            # 判断 arg 是否存在response中
             if arg in res:
-                # 存在的话,则保存当前的link
                 resList.append(m + '---' + arg)
-                # 判断 response中的key=arg的value是否为dict
                 if isinstance(res[arg], dict):
-                    # 判断 id 是否存在 res[arg]中,如果存在,则添加到link中
                     if 'id' in res[arg]:
                         resList.append(m + '---id')
                     elif '_id' in res[arg]:
@@ -720,51 +684,35 @@ def buildLinkForArg(crud, oldArg, arg, datas, allArgList, resList, newArgs):
 
                 else:
                     print(str(res[arg]))
-                # 移除掉已经分析过的arg,避免后面再次分析
                 newArgs.pop(oldArg)
                 break
-            # 当 arg 不存在response中时,对response进行深度遍历,一层一层的分析,最多分析2层
             else:
-                # 当 arg 不存在response中时,遍历response中的每一个key和value
                 for k1, v1 in res.items():
-                    # 判断 response中的每一个value是否为list,如果是,则选择list中的第一个元素来表示该value
                     if isinstance(v1, list) and len(v1) > 0:
                         v1 = v1[0]
-                    # 判断该value是否为dict
                     if isinstance(v1, dict):
-                        # 如果是dict, 则继续判断arg是否存在value中
                         if arg in v1:
-                            # 存在的话,则保存当前的link
                             resList.append(m + '---' + k1)
                             resList.append(m + '---' + arg)
-                            # 移除掉已经分析过的arg,避免后面再次分析
                             newArgs.pop(oldArg)
                             break
                         else:
-                            # 存在的话,则遍历当前的value,获取其下的子key和子value
                             for k2, v2 in v1.items():
-                                # 判断子value是否为list,如果是,则选择list中的第一个元素来表示该value
                                 if isinstance(v2, list) and len(v2) > 0:
                                     v2 = v2[0]
-                                # 判断该子value是否为dict
                                 if isinstance(v2, dict):
                                     if arg in v2:
-                                        # 存在的话,则保存当前的link
                                         resList.append(m + '---' + k1)
                                         resList.append(m + '---' + k2)
                                         resList.append(m + '---' + arg)
-                                        # 移除掉已经分析过的arg,避免后面再次分析
                                         newArgs.pop(oldArg)
                                         break
-                # 判断是否获取当前arg的link
                 if len(resList) > 0:
                     break
 
 
 def buildLinkBetweenArgsAndRes(crud, d, args, k, datas, allArgList, allLinkArgRes):
-    #  开始分析
     trueGo = True
-    # 保持原有的arg
     newArgs = args.copy()
 
     if len(datas) > 0:
@@ -773,18 +721,13 @@ def buildLinkBetweenArgsAndRes(crud, d, args, k, datas, allArgList, allLinkArgRe
         if k in allLinkArgRes:
             linkArgRes = allLinkArgRes[k]
         oldDatas = datas.copy()
-        # 判断待建立link的方法k是否属于data之中,如果存在就将k从datas中删除
         if k in datas:
             datas.pop(k)
-        # 开始建立arg与response的link,对每一个参数arg,尝试去寻找与之拥有同样名称的response中key
         for arg in args:
             resList = []
-            # 建立arg的link
             buildLinkForArg(crud, arg, arg, datas, allArgList, resList, newArgs)
-            # 如果没有建立起arg的link,则判断是否arg的格式比较特殊,如果是,则对arg的格式进行预处理,进行以上的类似分析
             if len(resList) == 0 and ((arg.lower()).startswith(d['OBJECT'].lower() + '_') or (arg.lower()).startswith(
                     d['OBJECT'].lower()) or (arg.lower()).endswith('s')):
-                # Pretreatment for arg
                 oldarg = arg
                 obj = d['OBJECT'].lower()
                 if (arg.lower()).startswith(obj + '_'):
@@ -793,7 +736,6 @@ def buildLinkBetweenArgsAndRes(crud, d, args, k, datas, allArgList, allLinkArgRe
                     arg = (arg.lower()).replace(obj, '')
                 else:
                     arg = arg[:len(arg) - 1]
-                # build link of arg
                 buildLinkForArg(crud, oldarg, arg, datas, allArgList, resList, newArgs)
                 arg = oldarg
 
@@ -803,7 +745,6 @@ def buildLinkBetweenArgsAndRes(crud, d, args, k, datas, allArgList, allLinkArgRe
     args = newArgs.copy()
     return trueGo, args, newArgs, datas, allArgList, allLinkArgRes
 
-# get links between args with response
 def getLinksBetweenArgsAndRes(data, allArgList, insertDatas, selectDatas, updateDatas, allLinkArgRes, sameArgList):
     for d in data:
         if d['Method URL'] is None:
