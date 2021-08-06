@@ -1,0 +1,8 @@
+https://developers.facebook.com/docs/workplace/reference/graph-api/community
+https://developers.facebook.com/docs/workplace/reference/graph-api/group
+https://developers.facebook.com/docs/workplace/reference/graph-api/post
+https://developers.facebook.com/docs/workplace/reference/graph-api/member
+https://developers.facebook.com/docs/workplace/reference/graph-api/skill
+https://developers.facebook.com/docs/workplace/reference/graph-api/event
+https://developers.facebook.com/docs/workplace/reference/graph-api/category
+https://developers.facebook.com/docs/workplace/reference/graph-api/data-export
